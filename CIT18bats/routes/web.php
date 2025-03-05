@@ -10,4 +10,4 @@ Route::get('/', function () {
 
 Route::get('/greet', [GreetController::class,'greet']);
 
-Route::resource('tasker', TaskController::class);
+Route::resource('/tasker', TaskController::class);
