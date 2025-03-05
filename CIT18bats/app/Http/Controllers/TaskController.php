@@ -2,107 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use Illuminate\Http\Request;
-use App\Models\Model1;
+use Illuminate\Support\Facades\Redirect;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $tasks = Model1::all();
-        return response()->json($tasks);
+        $tasks = Task::all();
+        return view('tasker.index', compact('tasks'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('create'); 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+    ]);
+
+    $task = Task::create([
+        'title' => $request->title,
+        'description' => $request->description,
+        'is_completed' => false,
+    ]);
+
+    
+    dd(Task::all()); 
+
+    return redirect()->route('tasker.index')->with('success', 'Task added successfully!');
+}
+
+
+    public function show(Task $task)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|string|in:pending,completed',
-        ]);
-
-        $task = Task::create($validatedData);
-
-        return response()->json([
-            'message' => 'Task created successfully',
-            'task' => $task
-        ], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $task = Task::find($id);
-
-        if (!$task) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
         return response()->json($task);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Task $task)
     {
-        //
+        return view('tasker.edit', compact('task'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Task $task)
     {
-        $task = Task::find($id);
-
-        if (!$task) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
-        $validatedData = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
+        $request->validate([
+            'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'sometimes|required|string|in:pending,completed',
+            'is_completed' => 'boolean',
         ]);
 
-        $task->update($validatedData);
+        $task->update($request->all());
 
-        return response()->json([
-            'message' => 'Task updated successfully',
-            'task' => $task
-        ]);
+        return Redirect::route('tasker.index')->with('success', 'Task updated successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $task = Task::find($id);
+    public function destroy(Task $task)
+{
+    $task->delete();
+    return redirect()->route('tasker.index')->with('success', 'Task deleted successfully!');
+}
 
-        if (!$task) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
-        $task->delete();
-
-        return response()->json(['message' => 'Task deleted successfully']);
-    }
 }
